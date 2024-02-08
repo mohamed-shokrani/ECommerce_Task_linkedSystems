@@ -40,23 +40,9 @@ namespace Infrastructure.GenericRepository
 
         public async Task<bool> Update(int id, T updatedEntity)
         {
-            var entity =await GetById(id);
-            if (entity is not null)
-            {
-                try
-                {
                     _Context.Set<T>().Update(updatedEntity);
                     return await _Context.SaveChangesAsync() > 0;
-                }
-                catch (Exception e)
-                {
-
-                    throw;
-                }
-             
-            }
-            return false;
-            
+               
         }
 
     }

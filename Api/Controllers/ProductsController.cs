@@ -1,13 +1,17 @@
 ﻿using Api.Helper;
 using AutoMapper;
+using Core.Constants;
 using Core.Dto;
 using Core.Interfaces;
 using Core.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 namespace Api.Controllers;
 
 [Route("api/products")]
 [ApiController]
+//[Authorize(AuthenticationSchemes = "Bearer", Roles = RolesConstants.User)]
+
 public class ProductsController : ControllerBase
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -20,6 +24,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize (AuthenticationSchemes = "Bearer")]
     public async Task<ActionResult> GetSingle(int id)
     {
         var product = await _unitOfWork.Products.GetById(id);
@@ -46,7 +51,7 @@ public class ProductsController : ControllerBase
         return Ok(paginationResponse);
     }
     [HttpPost]
-    public async Task<ActionResult> Add(ProductDto productDto)
+    public  ActionResult Add(ProductDto productDto)
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
@@ -66,8 +71,6 @@ public class ProductsController : ControllerBase
         product.Price = productDto.Price;
         product.Description = productDto.Description;
         product.Name  = productDto.Name;
-
-      
         product.UpdatedBy = "sss";
         product.UpdatedDate = DateTime.Now;
         var result=  await _unitOfWork.Products.Update(id,product);
