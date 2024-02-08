@@ -9,8 +9,9 @@ namespace Api.Helper
         public AutoMpperProfiles()
         {
             CreateMap<Product, ProductDto>().ReverseMap();
-                
-                
-                }
+            CreateMap<ProductUpdateDto, Product>();
+
+
+        }
     }
 }

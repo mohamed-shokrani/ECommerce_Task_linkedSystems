@@ -1,6 +1,5 @@
 ﻿using Api.Helper;
 using AutoMapper;
-using AutoMapper.QueryableExtensions;
 using Core.Dto;
 using Core.Interfaces;
 using Core.Models;
@@ -49,27 +48,39 @@ public class ProductsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> Add(ProductDto productDto)
     {
-        
-        var product = new Product
-        {
-            Description = productDto.Description,
-            Name = productDto.Name,
-            PhotoUrl = productDto.PhotoUrl,
-            Price = productDto.Price,
-            CreatedBy = "ssss",
-            CreatedDate = DateTime.Now,
-        };
-        try
-        {
-             await _unitOfWork.Products.AddAsync(product);
-           var res=await _unitOfWork.Complete();
-        }
-        catch (Exception e)
-        {
-
-            throw;
-        }
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+       var product = _mapper.Map<Product>(productDto);
+        product.UpdatedBy = "sss";
+        product.CreatedDate = DateTime.Now;
         return Ok();
+    }
+
+    [HttpPut]
+    public async Task<ActionResult> Update(int id,[FromBody] ProductUpdateDto productDto)
+    {
+        if (!ModelState.IsValid)
+            return BadRequest(ModelState);
+        var product =await _unitOfWork.Products.GetById(id);
+        product.PhotoUrl = productDto.PhotoUrl;
+        product.Price = productDto.Price;
+        product.Description = productDto.Description;
+        product.Name  = productDto.Name;
+
+      
+        product.UpdatedBy = "sss";
+        product.UpdatedDate = DateTime.Now;
+        var result=  await _unitOfWork.Products.Update(id,product);
+
+        return result ? NoContent(): NotFound("The element with the specified ID was not found.");
+        
+    }
+    [HttpDelete("{id}")]
+    public async Task<ActionResult> Delete(int id )
+    {
+       var result=await  _unitOfWork.Products.DeleteAsync(x=>x.Id ==id);
+        return result > 0 ? NoContent()
+                          : NotFound("The element with the specified ID was not found.");
     }
 
 }

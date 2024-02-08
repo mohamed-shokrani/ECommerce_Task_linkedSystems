@@ -21,44 +21,43 @@ namespace Infrastructure.GenericRepository
             _Context = context;
         }
 
-       
+
         public Task GetAllAsync()
         {
             throw new NotImplementedException();
         }
         public IQueryable<T> GetAllQueryable()
-        {
-            IQueryable<T> query = _Context.Set<T>();
-            
-            return query.AsQueryable();
-        }
+             => _Context.Set<T>().AsQueryable();
 
         public async Task<T> GetById(int id)
-        {
-            return await _Context.Set<T>().FindAsync(id);
-        }
-      
-      
-       
-        public async Task AddAsync(T entity)
-        {
-            try
-            {
-                await _Context.Set<T>().AddAsync(entity);
-
-            }
-            catch (Exception e)
-            {
-
-                throw;
-            }
-        }
-
-        public Task DeleteAsync(int id)
-        {
-            throw new NotImplementedException();
-        }
-
+            =>  await _Context.Set<T>().FindAsync(id);
         
+        public async Task AddAsync(T entity)
+            => await _Context.Set<T>().AddAsync(entity);
+
+        public async Task<int> DeleteAsync(Expression<Func<T, bool>> expression)
+            => await _Context.Set<T>().Where(expression).ExecuteDeleteAsync();
+
+        public async Task<bool> Update(int id, T updatedEntity)
+        {
+            var entity =await GetById(id);
+            if (entity is not null)
+            {
+                try
+                {
+                    _Context.Set<T>().Update(updatedEntity);
+                    return await _Context.SaveChangesAsync() > 0;
+                }
+                catch (Exception e)
+                {
+
+                    throw;
+                }
+             
+            }
+            return false;
+            
+        }
+
     }
 }
