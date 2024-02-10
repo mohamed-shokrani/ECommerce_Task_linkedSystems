@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/account")]
 [ApiController]
 public class AccountController : ControllerBase
 {
@@ -14,7 +14,7 @@ public class AccountController : ControllerBase
     {
         _authService = authService;
     }
-    [HttpPost]
+    [HttpPost("register")]
     public async Task<IActionResult> RegisterAsync([FromBody ]RegisterDto registerDto)
     {
         if (!ModelState.IsValid)
@@ -23,20 +23,31 @@ public class AccountController : ControllerBase
         var result = await _authService.RegisterAsync(registerDto);
         if (!result.IsAuthenticated)
             return BadRequest(result.Message);
+
+        if (!string.IsNullOrEmpty(result.RefreshToken))
+            SetRefereshTokenInCookie(result.RefreshToken, result.RefreshTokeExpiration);
+
         return Ok(result);
     }
-    [HttpPost("Login")]
+    [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginDto loginDto )
     {
         if (!ModelState.IsValid)
             return BadRequest(ModelState);
 
         var result = await _authService.Login(loginDto);
+
         if (!result.IsAuthenticated)
             return BadRequest(result.Message);
+
+        if (!string.IsNullOrEmpty(result.RefreshToken))
+            SetRefereshTokenInCookie(result.RefreshToken, result.RefreshTokeExpiration);
+       
+           
         return Ok(result);
     }
-    [HttpPost("AddRole")]
+ 
+    [HttpPost("addRole")]
     public async Task<ActionResult> AddRoleAsync([FromBody] AddRoleDto addRoleDto )
     {
         if (!ModelState.IsValid)
@@ -46,5 +57,25 @@ public class AccountController : ControllerBase
                return   BadRequest(result);
         
         return Ok(addRoleDto);
+    }
+    [HttpPost("logout")]
+    public async Task<ActionResult<AuthModel>> RevokToken([FromBody] RovokeTokenDto dto)
+    {
+        var token = dto.Token ?? Request.Cookies["refreshToken"];
+        if (string.IsNullOrEmpty(token))
+            return BadRequest("Token is required");
+
+        var result = await _authService.RevokeTokenAsync(token);
+        return result ? Ok() : BadRequest("Token is Invalid");
+    }
+    private void SetRefereshTokenInCookie(string refreshToken, DateTime expires)
+    {
+        var cookieOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            Expires = expires.ToLocalTime(),
+        };
+
+        Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
     }
 }

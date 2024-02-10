@@ -10,7 +10,7 @@ namespace Api.Helper
         {
             CreateMap<Product, ProductDto>().ReverseMap();
             CreateMap<ProductUpdateDto, Product>();
-
+            CreateMap<ProductCreateDto, Product>();
 
         }
     }

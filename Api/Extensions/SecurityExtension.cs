@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System;
+using System.Diagnostics;
+using System.Security.Claims;
 using System.Text;
 
 namespace Api.Extensions
@@ -15,10 +17,12 @@ namespace Api.Extensions
     {
         public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration config)
         {
-            //services.AddIdentityCore<AppUser>(options => { })
-            //    .AddEntityFrameworkStores<AppDbContext>()
-            //    .AddSignInManager<SignInManager<AppUser>>();
 
+
+
+            services.AddIdentity<AppUser, IdentityRole>()
+                 .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<AppDbContext>();
             services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -40,18 +44,21 @@ namespace Api.Extensions
                     ClockSkew = TimeSpan.Zero
                 };
             });
-
             services.AddAuthorization(options =>
             {
+                options.AddPolicy(RolesConstants.AdministratorOrManager, policy =>
+                {
+                    policy.RequireClaim(ClaimTypes.Role, RolesConstants.Administrator, RolesConstants.Manager);
+                });
                 options.AddPolicy(RolesConstants.Administrator, policy =>
-                    policy.RequireRole(RolesConstants.Administrator));
+                {
+                    policy.RequireClaim(ClaimTypes.Role,  RolesConstants.Administrator);
+                });
 
-                options.AddPolicy(RolesConstants.Manager, policy =>
-                    policy.RequireRole(RolesConstants.Administrator, RolesConstants.Manager));
-
-                options.AddPolicy(RolesConstants.User, policy =>
-                    policy.RequireRole(RolesConstants.Administrator));
             });
+
+            services.AddAuthentication();
+            services.AddAuthorization();
 
             return services;
         }

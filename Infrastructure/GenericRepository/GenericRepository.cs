@@ -38,7 +38,7 @@ namespace Infrastructure.GenericRepository
         public async Task<int> DeleteAsync(Expression<Func<T, bool>> expression)
             => await _Context.Set<T>().Where(expression).ExecuteDeleteAsync();
 
-        public async Task<bool> Update(int id, T updatedEntity)
+        public async Task<bool> Update( T updatedEntity)
         {
                     _Context.Set<T>().Update(updatedEntity);
                     return await _Context.SaveChangesAsync() > 0;
