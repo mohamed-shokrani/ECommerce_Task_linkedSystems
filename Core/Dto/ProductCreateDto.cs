@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Core.Attributes;
+using Core.Settings;
+using Microsoft.AspNetCore.Http;
 using System.ComponentModel.DataAnnotations;
 
 namespace Core.Dto;
@@ -13,5 +15,7 @@ public class ProductCreateDto
     [Required]
     [Range(1, (double)decimal.MaxValue)]
     public decimal Price { get; set; }
+    [AllowedExtensions(FileSettings.AllowedExtensions), MaxFileSize(FileSettings.MaxFileSizeInBytes)]
+
     public IFormFile ImageFile { get; set; }
 }

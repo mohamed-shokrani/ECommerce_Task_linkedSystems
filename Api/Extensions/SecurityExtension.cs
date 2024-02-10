@@ -3,64 +3,55 @@ using Core.Models;
 using Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Diagnostics;
 using System.Security.Claims;
 using System.Text;
 
-namespace Api.Extensions
+namespace Api.Extensions;
+public static class SecurityExtension
 {
-    public static class SecurityExtension
+    public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration config)
     {
-        public static IServiceCollection AddIdentityServices(this IServiceCollection services, IConfiguration config)
+        services.AddIdentity<AppUser, IdentityRole>()
+             .AddRoles<IdentityRole>()
+        .AddEntityFrameworkStores<AppDbContext>();
+        services.AddAuthentication(options =>
         {
-
-
-
-            services.AddIdentity<AppUser, IdentityRole>()
-                 .AddRoles<IdentityRole>()
-            .AddEntityFrameworkStores<AppDbContext>();
-            services.AddAuthentication(options =>
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.RequireHttpsMetadata = false;
+            options.SaveToken = false;
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
+                ValidateIssuerSigningKey = true,
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidIssuer = config["JWT:Issuer"],
+                ValidAudience = config["JWT:Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JWT:Key"])),
+                ClockSkew = TimeSpan.Zero
+            };
+        });
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy(RolesConstants.AdministratorOrManager, policy =>
             {
-                options.RequireHttpsMetadata = false;
-                options.SaveToken = false;
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidIssuer = config["JWT:Issuer"],
-                    ValidAudience = config["JWT:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["JWT:Key"])),
-                    ClockSkew = TimeSpan.Zero
-                };
+                policy.RequireClaim(ClaimTypes.Role, RolesConstants.Administrator, RolesConstants.Manager);
             });
-            services.AddAuthorization(options =>
+            options.AddPolicy(RolesConstants.Administrator, policy =>
             {
-                options.AddPolicy(RolesConstants.AdministratorOrManager, policy =>
-                {
-                    policy.RequireClaim(ClaimTypes.Role, RolesConstants.Administrator, RolesConstants.Manager);
-                });
-                options.AddPolicy(RolesConstants.Administrator, policy =>
-                {
-                    policy.RequireClaim(ClaimTypes.Role,  RolesConstants.Administrator);
-                });
-
+                policy.RequireClaim(ClaimTypes.Role, RolesConstants.Administrator);
             });
 
-            services.AddAuthentication();
-            services.AddAuthorization();
+        });
 
-            return services;
-        }
+        services.AddAuthentication();
+        services.AddAuthorization();
+
+        return services;
     }
 }

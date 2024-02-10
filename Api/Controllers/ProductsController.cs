@@ -123,9 +123,7 @@ public class ProductsController : ControllerBase
             product.PhotoUrl = newImageUrl;
         }
 
-        //product.CreatedBy = User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value;
-        product.CreatedBy = User.Claims.First(c => c.Type == ClaimTypes.Role).Value;
-
+        product.CreatedBy = User.Claims.First(c => c.Type == ClaimTypes.NameIdentifier).Value;
         product.UpdatedDate = DateTime.Now;
     }
 
