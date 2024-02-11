@@ -1,11 +1,14 @@
-﻿using Core.Dto;
+﻿using Core.Constants;
+using Core.Dto;
 using Core.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
 [Route("api/account")]
 [ApiController]
+[Authorize (Policy =RolesConstants.Administrator)]
 public class AccountController : ControllerBase
 {
     private readonly IAuthService _authService;

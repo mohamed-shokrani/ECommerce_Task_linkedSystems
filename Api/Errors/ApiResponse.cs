@@ -20,8 +20,7 @@ public class ApiResponse
             400 => "A bad request, you have made",
             401 => "Authorized, you are not",
             404 => "Resource Found, it was not",
-            500 => "Server Error, the errors are the path to the dark side errors need to anger" +
-            " anger needs to hate hate leeds to career change",
+            500 => "Server Error, the errors",
             _ =>""
         };
     }
